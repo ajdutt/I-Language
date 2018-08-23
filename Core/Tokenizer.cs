@@ -30,7 +30,6 @@ namespace Core
       /// Check if the parameter is a keyword
       /// </summary>
       /// <param name="x">Possible keyword</param>
-      /// <returns>Yes or no</returns>
       private bool IsKw(string x)
          => _kws.IndexOf($" {x} ") >= 0;
 
@@ -38,7 +37,6 @@ namespace Core
       /// Check if the character is a digit
       /// </summary>
       /// <param name="c">Character</param>
-      /// <returns>Yes or no</returns>
       private bool IsDigit(string c)
          => Regex.IsMatch(c, "[0-9]");
 
@@ -46,7 +44,6 @@ namespace Core
       /// Check if the character is a letter or an underscore
       /// </summary>
       /// <param name="c">Character</param>
-      /// <returns>Yes or no</returns>
       private bool IsIdStart(string c)
          => Regex.IsMatch(c, "[a-bA-B_]");
 
@@ -54,7 +51,6 @@ namespace Core
       /// Check if the character is a letter, a digit or an underscore
       /// </summary>
       /// <param name="c">Character</param>
-      /// <returns>Yes or no</returns>
       private bool IsId(string c)
          => Regex.IsMatch(c, "[a-bA-B0-9_]");
 
@@ -62,7 +58,6 @@ namespace Core
       /// Check if the character is an operator
       /// </summary>
       /// <param name="c">Character</param>
-      /// <returns>Yes or no</returns>
       private bool IsOper(string c)
          => Regex.IsMatch(c, "[+-*/%=&|<>!]");
 
@@ -70,7 +65,6 @@ namespace Core
       /// Check if the character is a punctuation
       /// </summary>
       /// <param name="c">Character</param>
-      /// <returns>Yes or no</returns>
       private bool IsPunc(string c)
          => Regex.IsMatch(c, @"[,.;(){}\[\]]");
 
@@ -78,7 +72,6 @@ namespace Core
       /// Check if the character is a whitespace
       /// </summary>
       /// <param name="c">Character</param>
-      /// <returns>Yes or no</returns>
       private bool IsWs(string c)
          => Regex.IsMatch(c, "[ \t\n]");
 
@@ -89,7 +82,7 @@ namespace Core
       /// <returns>A string that fulfills the predicate function</returns>
       private string RdWhile(Func<string, bool> pred)
       {
-         string s = string.Empty;
+         var s = string.Empty;
          while (!_input.Eof( ) && pred(_input.Peek( ).ToString( )))
          {
             s += _input.Next( );
@@ -98,13 +91,14 @@ namespace Core
       }
 
       /// <summary>
-      /// Finds a number
+      /// Reads a number
       /// </summary>
       /// <returns>Token of that number</returns>
       private Token RdNum()
       {
-         bool dot = false;
-         Func<string, bool> f = (c) =>
+         var dot = false;
+         var num = RdWhile(
+            (c) =>
          {
             if (c == ".")
             {
@@ -114,29 +108,28 @@ namespace Core
                return true;
             }
             return IsDigit(c);
+         });
+
+         return new Token( )
+         {
+            { "type", "num" },
+            { "value", num }
          };
-         string num = RdWhile(f);
-
-         var ret = new Token( );
-         ret["type"] = "num";
-         ret["value"] = num;
-
-         return ret;
       }
 
       /// <summary>
-      /// Finds an ID
+      /// Reads an ID
       /// </summary>
       /// <returns>Token of that ID</returns>
       private Token RdId()
       {
          var id = RdWhile(IsId);
 
-         var ret = new Token( );
-         ret["type"] = IsKw(id) ? "kw" : "var";
-         ret["value"] = id;
-
-         return ret;
+         return new Token( )
+         {
+            { "type", IsKw(id) ? "kw" : "var" },
+            { "value", id }
+         };
       }
 
       /// <summary>
@@ -170,6 +163,100 @@ namespace Core
          return str;
       }
 
+      /// <summary>
+      /// Reads a string
+      /// </summary>
+      /// <returns>Token of that string</returns>
+      private Token RdStr( )
+         => new Token( )
+            {
+               { "type", "str" },
+               { "value", RdEsc('"') }
+            };
 
+      /// <summary>
+      /// Reads a character
+      /// </summary>
+      /// <returns>Token of that character</returns>
+      private Token RdChar( )
+         => new Token( )
+            {
+               { "type", "char" },
+               { "value", RdEsc('\'') }
+            };
+
+      /// <summary>
+      /// Skips comment
+      /// </summary>
+      private void SkipComm( )
+      {
+         RdWhile((c) => c != "\n");
+         _input.Next( );
+      }
+
+      /// <summary>
+      /// Core function of the <see cref="Tokenizer"/>
+      /// </summary>
+      /// <returns>Proper token</returns>
+      private Token RdNext( )
+      {
+         RdWhile(IsWs);
+         if (_input.Eof( ))
+            return null;
+
+         var c = _input.Peek( );
+         if (c == '#')
+         {
+            SkipComm( );
+            return RdNext( );
+         }
+         if (c == '"')
+            return RdStr( );
+         if (IsDigit(c.ToString( )))
+            return RdNum( );
+         if (IsIdStart(c.ToString( )))
+            return RdId( );
+         if (IsPunc(c.ToString( )))
+            return new Token( )
+            {
+               { "type", "punc" },
+               { "value", _input.Next( ) }
+            };
+         if (IsOper(c.ToString( )))
+            return new Token( )
+            {
+               { "type", "oper" },
+               { "value", RdWhile(IsOper) }
+            };
+
+         throw _input.Croak("Cannot handle character: " + c);
+      }
+
+      /// <summary>
+      /// Returns the current token
+      /// </summary>
+      public Token Peek( )
+      {
+         if (_curr is null)
+            _curr = RdNext( );
+         return _curr;
+      }
+
+      /// <summary>
+      /// Moves to the next token
+      /// </summary>
+      /// <returns>Last token</returns>
+      public Token Next( )
+      {
+         var t = _curr;
+         _curr = null;
+         return t;
+      }
+
+      /// <summary>
+      /// Indicates if there is no more tokens
+      /// </summary>
+      public bool Eof( )
+         => Peek( ) == null;
    }
 }
