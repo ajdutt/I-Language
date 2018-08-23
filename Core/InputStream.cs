@@ -48,7 +48,7 @@ namespace Core
       }
 
       /// <summary>
-      /// Moves to next character
+      /// Moves to the next character
       /// </summary>
       /// <returns>Last character</returns>
       public char? Next()
