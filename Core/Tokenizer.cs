@@ -6,6 +6,9 @@ namespace Core
 {
    using Token = Dictionary<string, object>;
 
+   /// <summary>
+   /// Creates tokens using <see cref="InputStream"/>
+   /// </summary>
    public class Tokenizer
    {
       private Token _curr = new Token( );
@@ -77,6 +80,32 @@ namespace Core
          ret["value"] = id;
 
          return ret;
+      }
+
+      private string RdEsc(char end)
+      {
+         var esc = false;
+         var str = string.Empty;
+         _input.Next( );
+         while (!_input.Eof( ))
+         {
+            var c = _input.Next( );
+            if (esc)
+            {
+               str += c;
+               esc = false;
+            }
+
+            else if (c == '\\')
+               esc = true;
+
+            else if (c == end)
+               break;
+
+            else
+               str += c;
+         }
+         return str;
       }
 
 
