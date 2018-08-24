@@ -36,6 +36,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="InputStream.cs" />
+    <Compile Include="Parser.cs" />
     <Compile Include="Tokenizer.cs" />
   </ItemGroup>
   <ItemGroup>
