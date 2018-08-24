@@ -91,6 +91,19 @@ namespace Core
       }
 
       /// <summary>
+      /// Deafult constructor
+      /// </summary>
+      public Tokenizer( )
+      { }
+
+      /// <summary>
+      /// Constructor. Initializes the <see cref="InputStream"/>
+      /// </summary>
+      /// <param name="path"></param>
+      public Tokenizer(string path)
+         => _input = new InputStream(path);
+
+      /// <summary>
       /// Reads a number
       /// </summary>
       /// <returns>Token of that number</returns>
@@ -237,7 +250,7 @@ namespace Core
       /// </summary>
       public Token Peek( )
       {
-         if (_curr is null)
+         if (_curr == null)
             _curr = RdNext( );
          return _curr;
       }
