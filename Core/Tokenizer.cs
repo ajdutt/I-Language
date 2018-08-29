@@ -24,7 +24,7 @@ namespace Core
       /// Keywords of our language
       /// </summary>
       private const string _kws =
-         " if else bool char int long float double string def namesp use class true false ";
+         " if else bool var def namesp use class true false ";
 
       /// <summary>
       /// Check if the parameter is a keyword
