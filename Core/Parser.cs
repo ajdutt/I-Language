@@ -128,7 +128,7 @@ namespace Core
          return a;
       }
 
-      private Parsen ParseCall(object func)
+      private Parsen ParseCall(Func<object> func)
       {
          return new Parsen( )
          {
@@ -185,5 +185,38 @@ namespace Core
             { "value", (string)_input.Next()["value"] == "true" }
          };
 
+      private Parsen MaybeCall(Func<Parsen> expr)
+      {
+         var e = expr( );
+         return IsPunc('(') ? ParseCall(expr) : e;
+      }
+
+      private Parsen ParseAtom( )
+         => MaybeCall(( ) =>
+         {
+            if (IsPunc('('))
+            {
+               _input.Next( );
+               var exp = ParseExpr( );
+               SkipPunc(')');
+               return exp;
+            }
+            if (IsPunc('{'))
+               return ParseProg( );
+
+            if (IsKw("if"))
+               return ParseIf( );
+
+            if (IsKw("true") || IsKw("false"))
+               return ParseBool( );
+
+            if (IsKw("def"))
+            {
+               _input.Next( );
+               return ParseDef( );
+            }
+
+            if (IsKw("int") || IsKw("int") || IsKw("int"))
+         });
    }
 }
